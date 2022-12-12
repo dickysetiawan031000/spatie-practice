@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CommentController;
 use App\Http\Controllers\Api\NewsController;
 use App\Http\Controllers\Api\RolePermissionController;
 use Illuminate\Http\Request;
@@ -29,6 +30,9 @@ Route::middleware(['auth:api',])->group(function () {
     Route::apiResource('news', NewsController::class); // declare on constructor
     // Route::post('news', [NewsController::class, 'store'])->middleware('can:news.create'); // declare per endpoint - default laravel
     // Route::post('news', [NewsController::class, 'store'])->middleware('permission:news.create'); // declare per endpoint - spatie/laravel-permission
+
+    //Comment
+    Route::apiResource('comment', CommentController::class);
 
     // RolePermission
     Route::post('role-permission/check-role-permission', [RolePermissionController::class, 'check_role_permission']);
