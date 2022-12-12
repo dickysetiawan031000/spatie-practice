@@ -24,6 +24,10 @@ class RolePermissionController extends Controller
 
     user -> role -> permission
     user -> permission
+
+    user -> role -> permission ----- CONTOH = $this->middleware('role:role_name')
+    user -> permission ----- CONTOH = $this->middleware('permission:permission_name')
+
     permission -> role
     role -> permission
     */
@@ -44,7 +48,8 @@ class RolePermissionController extends Controller
             'status' => 'success',
             'message' => 'User role',
             'role' => $user->getRoleNames(),
-            'permission' => $user->getAllPermissions()->pluck('name')
+            'permission' => $user->getAllPermissions()->pluck('name'),
+            'direct permission' => $user->getDirectPermissions()->pluck('name'),
         ], 200);
     }
 
