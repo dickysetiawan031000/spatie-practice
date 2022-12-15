@@ -20,7 +20,7 @@ class NewsResource extends JsonResource
             'id' => $this->id,
             'title' => $this->title,
             'description' => $this->description,
-            'comment' => CommentResource::collection($this->comment),
+            'comment' => $this->comment,
 
         ];
     }

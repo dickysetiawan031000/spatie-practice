@@ -12,6 +12,7 @@ use App\Http\Requests\News\UpdateRequest;
 use App\Http\Resources\NewsResource;
 use App\Models\News;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redis;
 
 class NewsController extends Controller
 {
@@ -51,6 +52,7 @@ class NewsController extends Controller
      */
     public function index()
     {
+
         //get all news with comments
         $news = News::with('comment')->get();
 
@@ -80,6 +82,7 @@ class NewsController extends Controller
      */
     public function store(CreateRequest $request)
     {
+
         //validate request
         $validated = $request->validated();
 
@@ -88,6 +91,7 @@ class NewsController extends Controller
 
         //event listener
         if ($news) {
+
             event(new CreatedEvent($news));
         }
 
@@ -103,8 +107,28 @@ class NewsController extends Controller
      */
     public function show($id)
     {
-        //get news with comments
+
+        //get data on redis with comment
+        $cache = Redis::get('news:id:' . $id . ':comment');
+
+        //condition if data on redis
+        if ($cache) {
+            return response()->json([
+                'message' => 'Data on redis',
+                'data' => json_decode($cache)
+            ], 200);
+        }
+
+        //get news on database
         $news = News::with('comment')->find($id);
+
+        //set data on redis with comment
+        Redis::set('news:id:' . $id . ':comment', $news);
+
+        //event listener
+        if ($news) {
+            event(new GetEvent($news));
+        }
 
         //return news with resource
         return new NewsResource($news);
@@ -146,11 +170,18 @@ class NewsController extends Controller
         $update = $news->update($validated);
 
         if ($update) {
+            //delete data on redis with id
+            Redis::del('news:id:' . $id);
+
+            //set data on redis with comment
+            Redis::set('news:id:' . $id, $news->with('comment')->find($id));
+
             //event listener
             event(new UpdatedEvent($news));
+
+            //return news with resource
+            return new NewsResource($news);
         }
-        //return news with resource
-        return new NewsResource($news);
     }
 
     /**
@@ -170,10 +201,18 @@ class NewsController extends Controller
             ], 404);
         }
 
-        //delete news
+        //delete news and comment
         $delete = $news->delete();
+        $news->comment()->delete();
 
         if ($delete) {
+
+            //delete data on redis with id
+            Redis::del('news:id:' . $id);
+
+            //delete comment on redis
+            Redis::del('comment:news:id:' . $id);
+
             //event listener
             event(new DeletedEvent($news));
         }

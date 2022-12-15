@@ -3,21 +3,16 @@
 namespace App\Listeners\Comment;
 
 use App\Events\Comment\CreatedEvent;
+use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 
-class CreatedListener
+class CreatedListener implements ShouldQueue
 {
-    /**
-     * Create the event listener.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        //
-    }
+    use InteractsWithQueue, Queueable, SerializesModels, Dispatchable;
 
     /**
      * Handle the event.
@@ -28,6 +23,8 @@ class CreatedListener
     public function handle(CreatedEvent $event)
     {
         //Log Created Comment
-        Log::info('Comment Created Successfully');
+        $this->delay(10);
+        Log::info('Comment Created Listener Executed Successfully ');
+        // sleep(10);
     }
 }

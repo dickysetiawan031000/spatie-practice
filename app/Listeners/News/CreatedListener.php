@@ -2,29 +2,21 @@
 
 namespace App\Listeners\News;
 
+use App\Events\News\CreatedEvent;
+use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 
-class CreatedListener
+class CreatedListener implements ShouldQueue
 {
-    /**
-     * Create the event listener.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        //
-    }
+    use InteractsWithQueue, Dispatchable, SerializesModels, Queueable;
 
-    /**
-     * Handle the event.
-     *
-     * @param  object  $event
-     * @return void
-     */
-    public function handle($event)
+    public function handle(CreatedEvent $event)
     {
-        //
+        $this->delay(10);
+        Log::info('News Created Listener Executed Successfully ');
     }
 }

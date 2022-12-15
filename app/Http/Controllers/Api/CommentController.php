@@ -10,9 +10,12 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Comment\CreateRequest;
 use App\Http\Requests\Comment\UpdateRequest;
 use App\Http\Resources\CommentResource;
+use App\Jobs\CommentCreatedJob;
 use App\Models\Comment;
 use App\Models\News;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Redis;
 use Psy\Readline\Hoa\EventListener;
 
 class CommentController extends Controller
@@ -89,10 +92,20 @@ class CommentController extends Controller
         //create comment
         $comment = Comment::create($data);
 
+        Log::info('Comment created on controller');
+
         //if event listener
         if ($comment) {
+            //set redis comment on news
+            // Redis::set('comment:' . $comment->news_id, $comment->news_id);
+
             //event listener
             event(new CreatedEvent($comment));
+
+            //dispatch job
+            // CommentCreatedJob::dispatch($comment);
+            // $job = new CommentCreatedJob($comment);
+            // $this->dispatch($job);
         }
 
         //return with resource
@@ -107,19 +120,45 @@ class CommentController extends Controller
      */
     public function show($id)
     {
-        //show comment by id
-        $comment = Comment::findOrFail($id);
+        //get comment
+        $comment = Comment::with('news')->findOrFail($id);
 
-        //if comment not found
-        if (!$comment) {
+        //if event listener
+        if ($comment) {
+            //event listener
+            event(new GetEvent($comment));
+        } else {
             return response()->json([
-                'status' => 'error',
-                'message' => 'Comment not found'
+                'message' => 'Comment not found',
             ], 404);
         }
 
         //return with resource
         return new CommentResource($comment);
+
+        //-------------------------- show with redis --------------------------//
+
+        // $getComment = Comment::findOrFail($id);
+        //get data on redis with news_id
+        // $comment = Redis::get('comment:id' . $id . ':news_id' . $getComment->news_id);
+
+        //if get data on redis
+        // if ($comment) {
+        //     return response()->json([
+        //         'status' => 'success',
+        //         'message' => 'Get data on redis',
+        //         'data' => json_decode($comment),
+        //     ], 200);
+        // }
+
+        //else get data on database
+        // $comment = Comment::with('news')->findOrFail($id);
+
+        // //set data on redis with news_id
+        // Redis::set('comment:id' . $id . ':news_id' . $comment->news_id, $comment);
+
+        // //return with resource
+        // return new CommentResource($comment);
     }
 
     /**
@@ -162,10 +201,15 @@ class CommentController extends Controller
         ]);
 
         if ($update) {
+            //delete redis comment
+            // Redis::del('comment:id' . $id);
+
+            // //set data on redis with news_id
+            // Redis::set('comment:id' . $id, $comment->with('news')->findOrFail($id));
+
             //event listener
             event(new UpdatedEvent($comment));
         }
-
         //return with resource
         return new CommentResource($comment);
     }
@@ -189,10 +233,14 @@ class CommentController extends Controller
             ], 404);
         }
 
-        // //delete comment
+        //delete comment
         $delete = $comment->delete();
 
         if ($delete) {
+
+            // //delete redis comment
+            // Redis::del('comment:id' . $id);
+
             //event listener
             event(new DeletedEvent($comment));
         }

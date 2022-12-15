@@ -14,6 +14,7 @@ use App\Listeners\Comment\CreatedListener;
 use App\Listeners\Comment\DeletedListener;
 use App\Listeners\Comment\GetListener;
 use App\Listeners\Comment\UpdatedListener;
+use App\Listeners\News\CreatedListener as ListenersNewsCreatedListener;
 use App\Listeners\News\DeletedListener as NewsDeletedListener;
 use App\Listeners\News\GetListener as NewsGetListener;
 use App\Listeners\News\UpdatedListener as NewsUpdatedListener;
@@ -76,7 +77,7 @@ class EventServiceProvider extends ServiceProvider
 
         //News Created Event
         NewsCreatedEvent::class => [
-            NewsCreatedListener::class,
+            ListenersNewsCreatedListener::class,
         ],
 
         //News Updated Event
