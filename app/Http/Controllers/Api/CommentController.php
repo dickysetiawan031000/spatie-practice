@@ -11,10 +11,14 @@ use App\Http\Requests\Comment\CreateRequest;
 use App\Http\Requests\Comment\UpdateRequest;
 use App\Http\Resources\CommentResource;
 use App\Jobs\CommentCreatedJob;
+use App\Mail\CreateCommentEmail;
+use App\Mail\Email;
 use App\Models\Comment;
 use App\Models\News;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Redis;
 use Psy\Readline\Hoa\EventListener;
 
@@ -93,11 +97,18 @@ class CommentController extends Controller
         $comment = Comment::create($data);
 
         Log::info('Comment created on controller');
-
         //if event listener
         if ($comment) {
             //set redis comment on news
             // Redis::set('comment:' . $comment->news_id, $comment->news_id);
+            // $me = Auth::user();
+
+            // Mail::send('emails.comment-created', ['comment' => $comment], function ($message) use ($comment) {
+            //     $message->from('testing@gmail.com')->to($comment->news->user->email)->subject('Comment created subject');
+            // });
+
+            Mail::to($comment->user->email)->send(new CreateCommentEmail($comment));
+
 
             //event listener
             event(new CreatedEvent($comment));

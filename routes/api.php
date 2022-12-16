@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CommentController;
 use App\Http\Controllers\Api\NewsController;
 use App\Http\Controllers\Api\RolePermissionController;
+use App\Http\Controllers\Api\SendVerificationEmailController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Route;
@@ -33,7 +34,13 @@ Route::get('/redis', function () {
 Route::post('/register', [AuthController::class, 'register'])->name('register');
 Route::post('/login', [AuthController::class, 'login'])->name('login');
 
-Route::middleware(['auth:api',])->group(function () {
+//send verification email
+Route::post('/email/send-verification-email', [SendVerificationEmailController::class, 'sendVerificationEmail'])->name('send-verification-email')->middleware('auth:api');
+
+//verify email
+Route::get('/email/verify/{id}/{hash}', [SendVerificationEmailController::class, 'verify'])->name('verification.verify')->middleware('auth:api');
+
+Route::middleware(['auth:api', 'verified'])->group(function () {
     // News
     Route::apiResource('news', NewsController::class); // declare on constructor
     // Route::post('news', [NewsController::class, 'store'])->middleware('can:news.create'); // declare per endpoint - default laravel
